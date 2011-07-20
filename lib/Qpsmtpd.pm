@@ -4,6 +4,7 @@ use vars qw($VERSION $TraceLevel $Spool_dir $Size_threshold);
 
 use Sys::Hostname;
 use Qpsmtpd::Constants;
+use File::Temp qw/tempfile tempdir/;
 
 #use DashProfiler;
 
@@ -566,23 +567,16 @@ sub spool_dir {
   return $Spool_dir;
 }
 
-# For unique filenames. We write to a local tmp dir so we don't need
-# to make them unpredictable.
-my $transaction_counter = 0;
-
 sub temp_file {
   my $self = shift;
-  my $filename = $self->spool_dir()
-    . join(":", time, $$, $transaction_counter++);
+  my ($fh, $filename) = tempfile();
+  close($fh);
   return $filename;
 }
 
 sub temp_dir {
   my $self = shift;
-  my $mask = shift || 0700;
-  my $dirname = $self->temp_file();
-  -d $dirname or mkdir($dirname, $mask)
-    or die "Could not create temporary directory $dirname: $!";
+  my $dirname = tempdir();
   return $dirname;
 }
 
